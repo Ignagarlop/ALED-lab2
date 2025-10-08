@@ -26,11 +26,67 @@ public class ForwardKinematics {
 	 */
 	// Public method: returns the root of the position tree
 	public static Node computePositions(Segment root, double originX, double originY) {
-		// TODO: Implemente este método
+		return computePositions(root, originX, originY, 0);
 	}
 
-	// Private helper method that implements the recursive algorithm
-	private static Node computePositions(Segment link, double baseX, double baseY, double accumulatedAngle) {
-		// TODO: Implemente este método
-	}
+	/**
+     * Método recursivo (privado) que calcula la posición final de cada segmento
+     * y de todos sus hijos mediante trigonometría.
+     *
+     * En cada llamada:
+     * 
+     *  Calcula el punto final del segmento actual.
+     *   Crea un nodo en esa posición.
+     *  Si el segmento tiene hijos, llama recursivamente al método
+     *       para calcular sus posiciones
+     *   Si no tiene hijos, se cumple el caso base y termina la recursión.
+     *
+     * @param link              Segmento actual a procesar.
+     * @param baseX             Coordenada X del inicio del segmento.
+     * @param baseY             Coordenada Y del inicio del segmento.
+     * @param accumulatedAngle  Ángulo acumulado de todos los segmentos anteriores.
+     * @return Nodo que representa el punto final de este segmento.
+     */
+    private static Node computePositions(Segment link, double baseX, double baseY, double accumulatedAngle) {
+
+        // --- Medición de tiempos  ---
+        long startTime = System.nanoTime();
+
+        // --- CÓDIGO GENERAL ---
+       
+        double totalAngle = accumulatedAngle + link.getAngle();
+
+        // Calcula el punto final del segmento usando trigonometría
+        double endX = baseX + link.getLength() * Math.cos(totalAngle);
+        double endY = baseY + link.getLength() * Math.sin(totalAngle);
+
+        // Crea un nuevo nodo en la posición calculada
+        Node currentNode = new Node(endX, endY);
+
+        // --- CASO BASE ---
+        
+        if (link.getChildren().isEmpty()) {
+            long runningTime = System.nanoTime() - startTime;
+            System.out.println("Tiempo de computePositions para un segmento sin hijos: " 
+                    + runningTime + " ns");
+            return currentNode;
+        }
+
+        // --- PASO RECURSIVO ---
+        
+        for (Segment child : link.getChildren()) {
+            // Llamada recursiva: el extremo actual se convierte en la base del hijo
+            Node childNode = computePositions(child, endX, endY, totalAngle);
+            // Añade el nodo hijo al nodo actual
+            currentNode.addChild(childNode);
+        }
+
+        // Medición de tiempo para segmentos con hijos
+        long runningTime = System.nanoTime() - startTime;
+        System.out.println("Tiempo de computePositions para un segmento con " 
+                + link.getChildren().size() + " hijos: " + runningTime + " ns");
+
+        // Devuelve el nodo que representa el final de este segmento
+        return currentNode;
+    }
 }
